@@ -13,7 +13,7 @@ module VagrantPlugins
         end
 
         def call(env)
-          @ui.info "[vagrant-mutagen] Checking for host entries"
+          @ui.info "[vagrant-mutagen] Checking for SSH config entries"
           addHostEntries()
           @app.call(env)
         end

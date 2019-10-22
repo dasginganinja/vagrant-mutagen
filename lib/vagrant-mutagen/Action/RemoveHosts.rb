@@ -13,12 +13,10 @@ module VagrantPlugins
         def call(env)
           machine_action = env[:machine_action]
           if machine_action != :destroy || !@machine.id
-            if machine_action != :suspend || false != @machine.config.mutagen.remove_on_suspend
-              if machine_action != :halt || false != @machine.config.mutagen.remove_on_suspend
-                @ui.info "[vagrant-mutagen] Removing hosts"
+            if machine_action != :suspend
+              if machine_action != :halt
+                @ui.info "[vagrant-mutagen] Removing SSH config entry"
                 removeHostEntries
-              else
-                @ui.info "[vagrant-mutagen] Removing hosts on suspend disabled"
               end
             end
           end

@@ -1,36 +1,46 @@
+#TODO: remove before commit, just used for testing with .to_yaml function
+require 'yaml'
 module VagrantPlugins
   module Mutagen
     module Mutagen
-#       if ENV['VAGRANT_HOSTSUPDATER_PATH']
-#         @@hosts_path = ENV['VAGRANT_HOSTSUPDATER_PATH']
-#       else
-#         @@hosts_path = Vagrant::Util::Platform.windows? ? File.expand_path('system32/drivers/etc/hosts', ENV['windir']) : '/etc/hosts'
-#       end
-#       @isWindowsHost = Vagrant::Util::Platform.windows?
-#       @@ssh_known_hosts_path = '~/.ssh/known_hosts'
-      @@ssh_user_config_path = '~/.ssh/config'
+      if ENV['VAGRANT_MUTAGEN_SSH_CONFIG_PATH']
+        @@ssh_user_config_path = ENV['VAGRANT_MUTAGEN_SSH_CONFIG_PATH']
+      else
+        @@ssh_user_config_path = '~/.ssh/config'
+      end
+      @@ssh_user_config_path = File.expand_path(@@ssh_user_config_path)
+
+      # Get the IP(s) of the VM
+      def getIps
+        ips = []
+        @machine.config.vm.networks.each do |network|
+          key, options = network[0], network[1]
+          ip = options[:ip] if (key == :private_network || key == :public_network)
+          ips.push(ip) if ip
+        end
+        if not ips.any?
+          ips.push( '127.0.0.1' )
+        end
+        return ips.uniq
+      end
 
       def addHostEntries
-        ips = getIps
-        hostnames = getHostnames(ips)
-        file = File.open(@@hosts_path, "rb")
-        hostsContents = file.read
+#         ips = getIps
+        hostname = @machine.config.vm.hostname
+        @ui.info "It's TACO TIME for #{hostname}!!"
+#         hostnames = getHostnames(ips)
+
+        # Check config for existing Hostname entry managed by vagrant-mutagen
+        file = File.open(@@ssh_user_config_path, "rb")
+        configContents = file.read
         uuid = @machine.id
         name = @machine.name
-        entries = []
-        ips.each do |ip|
-          hostnames[ip].each do |hostname|
-            entryPattern = hostEntryPattern(ip, hostname)
-
-            if hostsContents.match(/#{entryPattern}/)
-              @ui.info "[vagrant-mutagen]   found entry for: #{ip} #{hostname}"
-            else
-              hostEntry = createHostEntry(ip, hostname, name, uuid)
-              entries.push(hostEntry)
-            end
-          end
-        end
-        addToHosts(entries)
+        # Get SSH config from Vagrant
+        sshconfig = `vagrant ssh-config --host #{hostname}`
+        # Append vagrant ssh config to end of file
+        puts sshconfig
+#         entries = []
+#         addToHosts(entries)
       end
 
       def cacheHostEntries
@@ -42,7 +52,7 @@ module VagrantPlugins
           @ui.info "[vagrant-mutagen] No machine id, nothing removed from #@@hosts_path"
           return
         end
-        file = File.open(@@hosts_path, "rb")
+        file = File.open(@@ssh_user_config_path, "rb")
         hostsContents = file.read
         uuid = @machine.id || @machine.config.mutagen.id
         hashedId = Digest::MD5.hexdigest(uuid)
