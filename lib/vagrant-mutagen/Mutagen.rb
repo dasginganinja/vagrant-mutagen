@@ -10,37 +10,46 @@ module VagrantPlugins
       end
       @@ssh_user_config_path = File.expand_path(@@ssh_user_config_path)
 
-      # Get the IP(s) of the VM
-      def getIps
-        ips = []
-        @machine.config.vm.networks.each do |network|
-          key, options = network[0], network[1]
-          ip = options[:ip] if (key == :private_network || key == :public_network)
-          ips.push(ip) if ip
-        end
-        if not ips.any?
-          ips.push( '127.0.0.1' )
-        end
-        return ips.uniq
-      end
-
       def addHostEntries
-#         ips = getIps
-        hostname = @machine.config.vm.hostname
-        @ui.info "It's TACO TIME for #{hostname}!!"
-#         hostnames = getHostnames(ips)
-
-        # Check config for existing Hostname entry managed by vagrant-mutagen
-        file = File.open(@@ssh_user_config_path, "rb")
-        configContents = file.read
+        # Prepare some needed variables
         uuid = @machine.id
         name = @machine.name
-        # Get SSH config from Vagrant
-        sshconfig = `vagrant ssh-config --host #{hostname}`
+        hostname = @machine.config.vm.hostname
+        # New Config for ~/.ssh/config
+        newconfig = ''
+#         @ui.info "It's TACO TIME for #{hostname}!!"
+
+        # Read contents of SSH config file
+        file = File.open(@@ssh_user_config_path, "rb")
+        configContents = file.read
+        # Check for existing entry for hostname in config
+        entryPattern = configEntryPattern(hostname, name, uuid)
+        if configContents.match(/#{entryPattern}/)
+          @ui.info "[vagrant-mutagen]   found SSH Config entry for: #{hostname}"
+        else
+          @ui.info "[vagrant-mutagen]   adding entry to SSH config for: #{hostname}"
+          # Get SSH config from Vagrant
+          newconfig = createConfigEntry(hostname, name, uuid)
+          puts newconfig
+        end
+
         # Append vagrant ssh config to end of file
-        puts sshconfig
-#         entries = []
-#         addToHosts(entries)
+#         addToHosts(newconfig)
+      end
+
+      # Create a regular expression that will match the vagrant-mutagen signature
+      def configEntryPattern(hostname, name, uuid = self.uuid)
+        Regexp.new('^# VAGRANT: .*^Host ' + hostname + '\s*(#.*)?$')
+      end
+
+      def createConfigEntry(hostname, name, uuid = self.uuid)
+        # Get the SSH config from Vagrant
+        sshconfig = `vagrant ssh-config --host #{hostname}`
+        # Trim Whitespace from end
+        sshconfig = sshconfig.gsub /^$\n/, ''
+        sshconfig = sshconfig.chomp
+        # Return the entry
+        %Q(#{signature(name, uuid)}\n#{sshconfig}\n#{signature(name, uuid)})
       end
 
       def cacheHostEntries
@@ -53,10 +62,10 @@ module VagrantPlugins
           return
         end
         file = File.open(@@ssh_user_config_path, "rb")
-        hostsContents = file.read
+        configContents = file.read
         uuid = @machine.id || @machine.config.mutagen.id
         hashedId = Digest::MD5.hexdigest(uuid)
-        if hostsContents.match(/#{hashedId}/)
+        if configContents.match(/#{hashedId}/)
           removeFromHosts
           removeFromSshKnownHosts
         end
