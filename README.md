@@ -24,13 +24,11 @@ Update the plugin with:
 
 ## Usage
 
-You currently only need the `hostname` and a `:private_network` network with a fixed IP address.
+You currently only need to set `enable` and `config.vm.hostname`.
 
-    config.vm.network :private_network, ip: "192.168.3.10"
-    config.vm.hostname = "www.testing.de"
-    config.mutagen.aliases = ["alias.testing.de", "alias2.somedomain.com"]
+    config.mutagen.enable = true
 
-This IP address and the hostname will be used for the entry in the `/etc/hosts` file.
+This hostname will be used for the entry in the `~/.ssh/config` file.
 
 ## Installing development version
 
