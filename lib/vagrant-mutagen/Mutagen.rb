@@ -30,16 +30,45 @@ module VagrantPlugins
           @ui.info "[vagrant-mutagen]   adding entry to SSH config for: #{hostname}"
           # Get SSH config from Vagrant
           newconfig = createConfigEntry(hostname, name, uuid)
-          puts newconfig
         end
 
         # Append vagrant ssh config to end of file
-#         addToHosts(newconfig)
+        addToSSHConfig(newconfig)
+      end
+
+      def addToSSHConfig(content)
+        return if content.length == 0
+
+        @ui.info "[vagrant-mutagen] Writing the following config to (#@@ssh_user_config_path)"
+        @ui.info content
+        if !File.writable_real?(@@ssh_user_config_path)
+          @ui.info "[vagrant-mutagen] This operation requires administrative access. You may " +
+                       "skip it by manually adding equivalent entries to the config file."
+          if !sudo(%Q(sh -c 'echo "#{content}" >> #@@ssh_user_config_path'))
+            @ui.error "[vagrant-mutagen] Failed to add config, could not use sudo"
+            adviseOnSudo
+          end
+        elsif Vagrant::Util::Platform.windows?
+          require 'tmpdir'
+          uuid = @machine.id || @machine.config.mutagen.id
+          tmpPath = File.join(Dir.tmpdir, 'hosts-' + uuid + '.cmd')
+          File.open(tmpPath, "w") do |tmpFile|
+          tmpFile.puts(">>\"#{@@ssh_user_config_path}\" echo #{content}")
+          end
+          sudo(tmpPath)
+          File.delete(tmpPath)
+        else
+          content = "\n" + content + "\n"
+          hostsFile = File.open(@@ssh_user_config_path, "a")
+          hostsFile.write(content)
+          hostsFile.close()
+        end
       end
 
       # Create a regular expression that will match the vagrant-mutagen signature
       def configEntryPattern(hostname, name, uuid = self.uuid)
-        Regexp.new('^# VAGRANT: .*^Host ' + hostname + '\s*(#.*)?$')
+        hashedId = Digest::MD5.hexdigest(uuid)
+        Regexp.new("^# VAGRANT: #{hashedId}.*$\nHost #{hostname}.*$")
       end
 
       def createConfigEntry(hostname, name, uuid = self.uuid)
