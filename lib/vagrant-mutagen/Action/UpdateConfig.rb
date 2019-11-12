@@ -13,8 +13,10 @@ module VagrantPlugins
         end
 
         def call(env)
-          @ui.info "[vagrant-mutagen] Checking for SSH config entries"
-          addConfigEntries()
+          if mutagen_enabled
+            @ui.info "[vagrant-mutagen] Checking for SSH config entries"
+            addConfigEntries()
+          end
           @app.call(env)
         end
 

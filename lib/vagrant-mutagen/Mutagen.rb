@@ -84,7 +84,6 @@ module VagrantPlugins
       end
 
       def removeConfigEntries
-        @ui.info "[vagrant-mutagen] Considering removing config entries"
         if !@machine.id and !@machine.config.mutagen.id
           @ui.info "[vagrant-mutagen] No machine id, nothing removed from #@@ssh_user_config_path"
           return
@@ -145,6 +144,14 @@ module VagrantPlugins
         else
           return system("sudo #{command}")
         end
+      end
+
+      def orchestration_enabled()
+        return @machine.config.mutagen.orchestrate == true
+      end
+
+      def mutagen_enabled()
+        return orchestration_enabled()
       end
     end
   end
