@@ -45,7 +45,6 @@ module VagrantPlugins
                        "skip it by manually adding equivalent entries to the config file."
           if !sudo(%Q(sh -c 'echo "#{content}" >> #@@ssh_user_config_path'))
             @ui.error "[vagrant-mutagen] Failed to add config, could not use sudo"
-            adviseOnSudo
           end
         elsif Vagrant::Util::Platform.windows?
           require 'tmpdir'
@@ -104,7 +103,6 @@ module VagrantPlugins
         if !File.writable_real?(@@ssh_user_config_path) || Vagrant::Util::Platform.windows?
           if !sudo(%Q(sed -i -e '/#{hashedId}/ d' #@@ssh_user_config_path))
             @ui.error "[vagrant-mutagen] Failed to remove config, could not use sudo"
-            adviseOnSudo
           end
         else
           hosts = ""
@@ -134,11 +132,6 @@ module VagrantPlugins
         else
           return system("sudo #{command}")
         end
-      end
-
-      def adviseOnSudo
-        @ui.error "[vagrant-mutagen] Consider adding the following to your sudoers file:"
-        @ui.error "[vagrant-mutagen]   https://github.com/cogitatio/vagrant-mutagen#suppressing-prompts-for-elevating-privileges"
       end
     end
   end
