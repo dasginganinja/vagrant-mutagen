@@ -1,7 +1,7 @@
 module VagrantPlugins
   module Mutagen
     module Action
-      class RemoveHosts
+      class RemoveConfig
         include Mutagen
 
         def initialize(app, env)
