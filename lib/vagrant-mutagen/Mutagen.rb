@@ -84,6 +84,7 @@ module VagrantPlugins
       end
 
       def removeConfigEntries
+        @ui.info "[vagrant-mutagen] Considering removing config entries"
         if !@machine.id and !@machine.config.mutagen.id
           @ui.info "[vagrant-mutagen] No machine id, nothing removed from #@@ssh_user_config_path"
           return
@@ -101,13 +102,25 @@ module VagrantPlugins
         uuid = @machine.id || @machine.config.mutagen.id
         hashedId = Digest::MD5.hexdigest(uuid)
         if !File.writable_real?(@@ssh_user_config_path) || Vagrant::Util::Platform.windows?
-          if !sudo(%Q(sed -i -e '/#{hashedId}/ d' #@@ssh_user_config_path))
+          if !sudo(%Q(sed -i -e '/# VAGRANT: #{hashedId}/,/# VAGRANT: #{hashedId}/d' #@@ssh_user_config_path))
             @ui.error "[vagrant-mutagen] Failed to remove config, could not use sudo"
           end
         else
           hosts = ""
+          pair_started = false
+          pair_ended = false
           File.open(@@ssh_user_config_path).each do |line|
-            hosts << line unless line.include?(hashedId)
+            # Reset
+            if pair_started == true && pair_ended == true
+              pair_started = pair_ended = false
+            end
+            if line.match(/#{hashedId}/)
+              if pair_started == true
+                pair_ended = true
+              end
+              pair_started = true
+            end
+            hosts << line unless pair_started
           end
           hosts.strip!
           hostsFile = File.open(@@ssh_user_config_path, "w")
