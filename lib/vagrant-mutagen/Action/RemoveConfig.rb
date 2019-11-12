@@ -16,7 +16,7 @@ module VagrantPlugins
             if machine_action != :suspend
               if machine_action != :halt
                 @ui.info "[vagrant-mutagen] Removing SSH config entry"
-                removeHostEntries
+                removeConfigEntries
               end
             end
           end

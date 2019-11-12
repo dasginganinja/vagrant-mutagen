@@ -84,9 +84,9 @@ module VagrantPlugins
         @machine.config.mutagen.id = @machine.id
       end
 
-      def removeHostEntries
+      def removeConfigEntries
         if !@machine.id and !@machine.config.mutagen.id
-          @ui.info "[vagrant-mutagen] No machine id, nothing removed from #@@hosts_path"
+          @ui.info "[vagrant-mutagen] No machine id, nothing removed from #@@ssh_user_config_path"
           return
         end
         file = File.open(@@ssh_user_config_path, "rb")
@@ -94,40 +94,27 @@ module VagrantPlugins
         uuid = @machine.id || @machine.config.mutagen.id
         hashedId = Digest::MD5.hexdigest(uuid)
         if configContents.match(/#{hashedId}/)
-          removeFromHosts
-          removeFromSshKnownHosts
+          removeFromConfig
         end
       end
 
-      def removeFromHosts(options = {})
+      def removeFromConfig(options = {})
         uuid = @machine.id || @machine.config.mutagen.id
         hashedId = Digest::MD5.hexdigest(uuid)
-        if !File.writable_real?(@@hosts_path) || Vagrant::Util::Platform.windows?
-          if !sudo(%Q(sed -i -e '/#{hashedId}/ d' #@@hosts_path))
-            @ui.error "[vagrant-mutagen] Failed to remove hosts, could not use sudo"
+        if !File.writable_real?(@@ssh_user_config_path) || Vagrant::Util::Platform.windows?
+          if !sudo(%Q(sed -i -e '/#{hashedId}/ d' #@@ssh_user_config_path))
+            @ui.error "[vagrant-mutagen] Failed to remove config, could not use sudo"
             adviseOnSudo
           end
         else
           hosts = ""
-          File.open(@@hosts_path).each do |line|
+          File.open(@@ssh_user_config_path).each do |line|
             hosts << line unless line.include?(hashedId)
           end
           hosts.strip!
-          hostsFile = File.open(@@hosts_path, "w")
+          hostsFile = File.open(@@ssh_user_config_path, "w")
           hostsFile.write(hosts)
           hostsFile.close()
-        end
-      end
-
-      def removeFromSshKnownHosts
-        if !@isWindowsHost
-          hostnames = getHostnames
-          hostnames.each do |hostname|
-            command = %Q(sed -i -e '/#{hostname}/ d' #@@ssh_known_hosts_path)
-            if system(command)
-              @ui.info "[vagrant-mutagen] Removed host: #{hostname} from ssh_known_hosts file: #@@ssh_known_hosts_path"
-            end
-          end
         end
       end
 
