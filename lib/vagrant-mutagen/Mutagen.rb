@@ -10,14 +10,13 @@ module VagrantPlugins
       end
       @@ssh_user_config_path = File.expand_path(@@ssh_user_config_path)
 
-      def addHostEntries
+      def addConfigEntries
         # Prepare some needed variables
         uuid = @machine.id
         name = @machine.name
         hostname = @machine.config.vm.hostname
         # New Config for ~/.ssh/config
         newconfig = ''
-#         @ui.info "It's TACO TIME for #{hostname}!!"
 
         # Read contents of SSH config file
         file = File.open(@@ssh_user_config_path, "rb")
@@ -81,7 +80,7 @@ module VagrantPlugins
         %Q(#{signature(name, uuid)}\n#{sshconfig}\n#{signature(name, uuid)})
       end
 
-      def cacheHostEntries
+      def cacheConfigEntries
         @machine.config.mutagen.id = @machine.id
       end
 
@@ -97,51 +96,6 @@ module VagrantPlugins
         if configContents.match(/#{hashedId}/)
           removeFromHosts
           removeFromSshKnownHosts
-        end
-      end
-
-      def host_entry(ip, hostnames, name, uuid = self.uuid)
-        %Q(#{ip}  #{hostnames.join(' ')}  #{signature(name, uuid)})
-      end
-
-      def createHostEntry(ip, hostname, name, uuid = self.uuid)
-        %Q(#{ip}  #{hostname}  #{signature(name, uuid)})
-      end
-
-      # Create a regular expression that will match *any* entry describing the
-      # given IP/hostname pair. This is intentionally generic in order to
-      # recognize entries created by the end user.
-      def hostEntryPattern(ip, hostname)
-        Regexp.new('^\s*' + ip + '\s+' + hostname + '\s*(#.*)?$')
-      end
-
-      def addToHosts(entries)
-        return if entries.length == 0
-        content = entries.join("\n").strip
-
-        @ui.info "[vagrant-mutagen] Writing the following entries to (#@@hosts_path)"
-        @ui.info "[vagrant-mutagen]   " + entries.join("\n[vagrant-mutagen]   ")
-        if !File.writable_real?(@@hosts_path)
-          @ui.info "[vagrant-mutagen] This operation requires administrative access. You may " +
-                       "skip it by manually adding equivalent entries to the hosts file."
-          if !sudo(%Q(sh -c 'echo "#{content}" >> #@@hosts_path'))
-            @ui.error "[vagrant-mutagen] Failed to add hosts, could not use sudo"
-            adviseOnSudo
-          end
-        elsif Vagrant::Util::Platform.windows?
-          require 'tmpdir'
-          uuid = @machine.id || @machine.config.mutagen.id
-          tmpPath = File.join(Dir.tmpdir, 'hosts-' + uuid + '.cmd')
-          File.open(tmpPath, "w") do |tmpFile|
-          entries.each { |line| tmpFile.puts(">>\"#{@@hosts_path}\" echo #{line}") }
-          end
-          sudo(tmpPath)
-          File.delete(tmpPath)
-        else
-          content = "\n" + content + "\n"
-          hostsFile = File.open(@@hosts_path, "a")
-          hostsFile.write(content)
-          hostsFile.close()
         end
       end
 
@@ -180,24 +134,6 @@ module VagrantPlugins
       def signature(name, uuid = self.uuid)
         hashedId = Digest::MD5.hexdigest(uuid)
         %Q(# VAGRANT: #{hashedId} (#{name}) / #{uuid})
-      end
-
-      def sudo(command)
-        return if !command
-        if Vagrant::Util::Platform.windows?
-          require 'win32ole'
-          args = command.split(" ")
-          command = args.shift
-          sh = WIN32OLE.new('Shell.Application')
-          sh.ShellExecute(command, args.join(" "), '', 'runas', 0)
-        else
-          return system("sudo #{command}")
-        end
-      end
-
-      def adviseOnSudo
-        @ui.error "[vagrant-mutagen] Consider adding the following to your sudoers file:"
-        @ui.error "[vagrant-mutagen]   https://github.com/cogitatio/vagrant-mutagen#suppressing-prompts-for-elevating-privileges"
       end
     end
   end

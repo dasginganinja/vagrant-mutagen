@@ -1,5 +1,5 @@
-require "vagrant-mutagen/Action/UpdateHosts"
-require "vagrant-mutagen/Action/CacheHosts"
+require "vagrant-mutagen/Action/UpdateConfig"
+require "vagrant-mutagen/Action/CacheConfig"
 require "vagrant-mutagen/Action/RemoveHosts"
 
 module VagrantPlugins
@@ -17,11 +17,11 @@ module VagrantPlugins
       end
 
       action_hook(:mutagen, :machine_action_up) do |hook|
-        hook.append(Action::UpdateHosts)
+        hook.append(Action::UpdateConfig)
       end
 
       action_hook(:mutagen, :machine_action_provision) do |hook|
-        hook.before(Vagrant::Action::Builtin::Provision, Action::UpdateHosts)
+        hook.before(Vagrant::Action::Builtin::Provision, Action::UpdateConfig)
       end
 
       action_hook(:mutagen, :machine_action_halt) do |hook|
@@ -33,7 +33,7 @@ module VagrantPlugins
       end
 
       action_hook(:mutagen, :machine_action_destroy) do |hook|
-        hook.prepend(Action::CacheHosts)
+        hook.prepend(Action::CacheConfig)
       end
 
       action_hook(:mutagen, :machine_action_destroy) do |hook|
@@ -42,12 +42,12 @@ module VagrantPlugins
 
       action_hook(:mutagen, :machine_action_reload) do |hook|
         hook.prepend(Action::RemoveHosts)
-        hook.append(Action::UpdateHosts)
+        hook.append(Action::UpdateConfig)
       end
 
       action_hook(:mutagen, :machine_action_resume) do |hook|
         hook.prepend(Action::RemoveHosts)
-        hook.append(Action::UpdateHosts)
+        hook.append(Action::UpdateConfig)
       end
 
       command(:mutagen) do

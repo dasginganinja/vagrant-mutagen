@@ -1,7 +1,7 @@
 module VagrantPlugins
   module Mutagen
     module Action
-      class CacheHosts
+      class CacheConfig
         include Mutagen
 
         def initialize(app, env)
@@ -10,7 +10,7 @@ module VagrantPlugins
         end
 
         def call(env)
-          cacheHostEntries
+          cacheConfigEntries
           @app.call(env)
         end
 

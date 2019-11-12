@@ -2,7 +2,7 @@ require_relative "../Mutagen"
 module VagrantPlugins
   module Mutagen
     module Action
-      class UpdateHosts
+      class UpdateConfig
         include Mutagen
 
 
@@ -14,7 +14,7 @@ module VagrantPlugins
 
         def call(env)
           @ui.info "[vagrant-mutagen] Checking for SSH config entries"
-          addHostEntries()
+          addConfigEntries()
           @app.call(env)
         end
 
