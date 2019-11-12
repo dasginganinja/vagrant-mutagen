@@ -122,6 +122,24 @@ module VagrantPlugins
         hashedId = Digest::MD5.hexdigest(uuid)
         %Q(# VAGRANT: #{hashedId} (#{name}) / #{uuid})
       end
+
+      def sudo(command)
+        return if !command
+        if Vagrant::Util::Platform.windows?
+          require 'win32ole'
+          args = command.split(" ")
+          command = args.shift
+          sh = WIN32OLE.new('Shell.Application')
+          sh.ShellExecute(command, args.join(" "), '', 'runas', 0)
+        else
+          return system("sudo #{command}")
+        end
+      end
+
+      def adviseOnSudo
+        @ui.error "[vagrant-mutagen] Consider adding the following to your sudoers file:"
+        @ui.error "[vagrant-mutagen]   https://github.com/cogitatio/vagrant-mutagen#suppressing-prompts-for-elevating-privileges"
+      end
     end
   end
 end
