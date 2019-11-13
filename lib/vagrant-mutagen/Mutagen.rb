@@ -170,6 +170,20 @@ module VagrantPlugins
         end
         system(projectStatusCommand) # show project status to indicate if there are conflicts
       end
+
+      def terminateOrchestration()
+        projectStartedCommand = "mutagen project list >/dev/null 2>/dev/null"
+        projectTerminateCommand = "mutagen project terminate"
+        projectStatusCommand = "mutagen project list"
+        if system(projectStartedCommand) # mutagen project list returns 1 on error when no project is started
+          @ui.info "[vagrant-mutagen] Stopping mutagen project orchestration"
+          if !system(projectTerminateCommand)
+            @ui.error "[vagrant-mutagen] Failed to stop mutagen project (see error above)"
+          end
+        end
+        system(projectStatusCommand)
+      end
+
     end
   end
 end
