@@ -153,6 +153,17 @@ module VagrantPlugins
       def mutagen_enabled()
         return orchestration_enabled()
       end
+
+      def startOrchestration()
+        daemonCommand = "mutagen daemon start"
+        projectStartCommand = "mutagen project start"
+        if !system(daemonCommand)
+          @ui.error "[vagrant-mutagen] Failed to start mutagen daemon"
+        end
+        if !system(projectStartCommand)
+          @ui.error "[vagrant-mutagen] Failed to start mutagen project"
+        end
+      end
     end
   end
 end

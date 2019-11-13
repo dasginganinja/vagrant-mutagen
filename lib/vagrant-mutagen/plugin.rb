@@ -1,6 +1,7 @@
 require "vagrant-mutagen/Action/UpdateConfig"
 require "vagrant-mutagen/Action/CacheConfig"
 require "vagrant-mutagen/Action/RemoveConfig"
+require "vagrant-mutagen/Action/StartOrchestration"
 
 module VagrantPlugins
   module Mutagen
@@ -18,10 +19,12 @@ module VagrantPlugins
 
       action_hook(:mutagen, :machine_action_up) do |hook|
         hook.append(Action::UpdateConfig)
+        hook.append(Action::StartOrchestration)
       end
 
       action_hook(:mutagen, :machine_action_provision) do |hook|
         hook.before(Vagrant::Action::Builtin::Provision, Action::UpdateConfig)
+        hook.before(Vagrant::Action::Builtin::Provision, Action::StartOrchestration)
       end
 
       action_hook(:mutagen, :machine_action_halt) do |hook|
@@ -43,11 +46,13 @@ module VagrantPlugins
       action_hook(:mutagen, :machine_action_reload) do |hook|
         hook.prepend(Action::RemoveConfig)
         hook.append(Action::UpdateConfig)
+        hook.append(Action::StartOrchestration)
       end
 
       action_hook(:mutagen, :machine_action_resume) do |hook|
         hook.prepend(Action::RemoveConfig)
         hook.append(Action::UpdateConfig)
+        hook.append(Action::StartOrchestration)
       end
 
       command(:mutagen) do
