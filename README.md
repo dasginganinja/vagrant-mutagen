@@ -24,9 +24,9 @@ Update the plugin with:
 
 ## Usage
 
-You currently only need to set `enable` and `config.vm.hostname`.
+You currently only need to set `orchestrate` and `config.vm.hostname`.
 
-    config.mutagen.enable = true
+    config.mutagen.orchestrate = true
 
 This hostname will be used for the entry in the `~/.ssh/config` file.
 
@@ -52,6 +52,12 @@ vagrant plugin install vagrant-mutagen-*.gem
 
 
 ## Versions
+
+### 0.1.0
+* Added config to enable orchestration.
+* Added new actions to start and terminate orchestration.
+* Hooked new actions into vagrant lifecycle events.
+* Refactored vagrant-hostsupdater hosts commands for config.
 
 ### 0.0.1
 * Started with vagrant-hostsupdater 1.1.0
