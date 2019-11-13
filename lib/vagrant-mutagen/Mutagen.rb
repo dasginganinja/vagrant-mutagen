@@ -156,13 +156,19 @@ module VagrantPlugins
 
       def startOrchestration()
         daemonCommand = "mutagen daemon start"
+        projectStartedCommand = "mutagen project list >/dev/null 2>/dev/null"
         projectStartCommand = "mutagen project start"
+        projectStatusCommand = "mutagen project list"
         if !system(daemonCommand)
           @ui.error "[vagrant-mutagen] Failed to start mutagen daemon"
         end
-        if !system(projectStartCommand)
-          @ui.error "[vagrant-mutagen] Failed to start mutagen project"
+        if !system(projectStartedCommand) # mutagen project list returns 1 on error when no project is started
+          @ui.info "[vagrant-mutagen] Starting mutagen project orchestration"
+          if !system(projectStartCommand)
+            @ui.error "[vagrant-mutagen] Failed to start mutagen project (see error above)"
+          end
         end
+        system(projectStatusCommand) # show project status to indicate if there are conflicts
       end
     end
   end
