@@ -82,6 +82,9 @@ vagrant plugin install vagrant-mutagen-*.gem
 
 ## Versions
 
+### 0.1.1
+* Added mutagen.yml example
+
 ### 0.1.0
 * Added config to enable orchestration.
 * Added new actions to start and terminate orchestration.
