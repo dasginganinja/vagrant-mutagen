@@ -14,7 +14,6 @@ module VagrantPlugins
 
         def call(env)
           if mutagen_enabled
-            @ui.info "[vagrant-mutagen] Terminating Project Orchestration (config: /mutagen.yml)"
             terminateOrchestration
           end
           @app.call(env)

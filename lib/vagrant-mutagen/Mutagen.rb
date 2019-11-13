@@ -163,7 +163,7 @@ module VagrantPlugins
           @ui.error "[vagrant-mutagen] Failed to start mutagen daemon"
         end
         if !system(projectStartedCommand) # mutagen project list returns 1 on error when no project is started
-          @ui.info "[vagrant-mutagen] Starting mutagen project orchestration"
+          @ui.info "[vagrant-mutagen] Starting mutagen project orchestration (config: /mutagen.yml)"
           if !system(projectStartCommand)
             @ui.error "[vagrant-mutagen] Failed to start mutagen project (see error above)"
           end
@@ -174,7 +174,7 @@ module VagrantPlugins
       def terminateOrchestration()
         projectStartedCommand = "mutagen project list >/dev/null 2>/dev/null"
         projectTerminateCommand = "mutagen project terminate"
-        projectStatusCommand = "mutagen project list"
+        projectStatusCommand = "mutagen project list 2>/dev/null"
         if system(projectStartedCommand) # mutagen project list returns 1 on error when no project is started
           @ui.info "[vagrant-mutagen] Stopping mutagen project orchestration"
           if !system(projectTerminateCommand)
