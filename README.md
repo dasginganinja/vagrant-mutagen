@@ -24,11 +24,40 @@ Update the plugin with:
 
 ## Usage
 
-You currently only need to set `orchestrate` and `config.vm.hostname`.
+You need to set `orchestrate` and `config.vm.hostname`.
 
     config.mutagen.orchestrate = true
 
 This hostname will be used for the entry in the `~/.ssh/config` file.
+
+Orchestration also requires a `mutagen.yml` file configured for your project.
+
+### Example Project Orchestration Config (`mutagen.yml`)
+
+As an example starting point you can use the following for a Drupal project:
+```
+sync:
+  defaults:
+    mode: "two-way-resolved"
+    ignore:
+      vcs: false
+      paths:
+        - /.idea/
+        - /vendor/**/.git/
+        - contrib/**/.git/
+        - node_modules/
+        - /web/sites/**/files/
+    symlink:
+      mode: "portable"
+    watch:
+      mode: "portable"
+    permissions:
+      defaultFileMode: 0644
+      defaultDirectoryMode: 0755
+  app:
+    alpha: "your-vm.hostname:/srv/www/app/"
+    beta: "./app/"
+```
 
 ## Installing development version
 
