@@ -24,13 +24,14 @@ module VagrantPlugins
         # Check for existing entry for hostname in config
         entryPattern = configEntryPattern(hostname, name, uuid)
         if configContents.match(/#{entryPattern}/)
-          @ui.info "[vagrant-mutagen]   found SSH Config entry for: #{hostname}"
+          @ui.info "[vagrant-mutagen]   updating SSH Config entry for: #{hostname}"
+          removeConfigEntries
         else
           @ui.info "[vagrant-mutagen]   adding entry to SSH config for: #{hostname}"
-          # Get SSH config from Vagrant
-          newconfig = createConfigEntry(hostname, name, uuid)
         end
 
+        # Get SSH config from Vagrant
+        newconfig = createConfigEntry(hostname, name, uuid)
         # Append vagrant ssh config to end of file
         addToSSHConfig(newconfig)
       end
