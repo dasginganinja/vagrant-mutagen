@@ -82,6 +82,9 @@ vagrant plugin install vagrant-mutagen-*.gem
 
 ## Versions
 
+### 0.1.2
+* Issues with multiple VMs arose due to outdated SSH config. SSH config is now regenerated each `vagrant up`.
+
 ### 0.1.1
 * Added mutagen.yml example
 
