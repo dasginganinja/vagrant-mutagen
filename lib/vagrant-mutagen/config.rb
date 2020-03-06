@@ -7,7 +7,11 @@ module VagrantPlugins
         attr_accessor :orchestrate
 
         def initialize
-          @orchestrate = false
+          @orchestrate = UNSET_VALUE
+        end
+
+        def finalize!
+          @orchestrate = false if @orchestrate == UNSET_VALUE
         end
     end
   end
