@@ -52,10 +52,12 @@ module VagrantPlugins
           uuid = @machine.id || @machine.config.mutagen.id
           tmpPath = File.join(Dir.tmpdir, 'hosts-' + uuid + '.cmd')
           File.open(tmpPath, "w") do |tmpFile|
-          tmpFile.puts(">>\"#{@@ssh_user_config_path}\" echo #{content}")
+            cmd_content = content.lines.map {|line| ">>\"#{@@ssh_user_config_path}\" echo #{line}" }.join
+            tmpFile.puts(cmd_content)
           end
           sudo(tmpPath)
-          File.delete(tmpPath)
+          #[TODO] sudo を実行するのを待たずにファイルが削除されるのか、delete すると cmd が実行されない
+          # File.delete(tmpPath)
         else
           content = "\n" + content + "\n"
           hostsFile = File.open(@@ssh_user_config_path, "a")
