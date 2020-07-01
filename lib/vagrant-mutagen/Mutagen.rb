@@ -3,6 +3,9 @@ require 'yaml'
 module VagrantPlugins
   module Mutagen
     module Mutagen
+      DISCARD_STDOUT = Vagrant::Util::Platform.windows? ? '>nul'  : '>/dev/null'
+      DISCARD_STDERR = Vagrant::Util::Platform.windows? ? '2>nul' : '2>/dev/null'
+
       if ENV['VAGRANT_MUTAGEN_SSH_CONFIG_PATH']
         @@ssh_user_config_path = ENV['VAGRANT_MUTAGEN_SSH_CONFIG_PATH']
       else
@@ -159,7 +162,7 @@ module VagrantPlugins
 
       def startOrchestration()
         daemonCommand = "mutagen daemon start"
-        projectStartedCommand = "mutagen project list >/dev/null 2>/dev/null"
+        projectStartedCommand = "mutagen project list #{DISCARD_STDOUT} #{DISCARD_STDERR}"
         projectStartCommand = "mutagen project start"
         projectStatusCommand = "mutagen project list"
         if !system(daemonCommand)
@@ -175,9 +178,9 @@ module VagrantPlugins
       end
 
       def terminateOrchestration()
-        projectStartedCommand = "mutagen project list >/dev/null 2>/dev/null"
+        projectStartedCommand = "mutagen project list #{DISCARD_STDOUT} #{DISCARD_STDERR}"
         projectTerminateCommand = "mutagen project terminate"
-        projectStatusCommand = "mutagen project list 2>/dev/null"
+        projectStatusCommand = "mutagen project list #{DISCARD_STDERR}"
         if system(projectStartedCommand) # mutagen project list returns 1 on error when no project is started
           @ui.info "[vagrant-mutagen] Stopping mutagen project orchestration"
           if !system(projectTerminateCommand)
