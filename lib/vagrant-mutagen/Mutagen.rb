@@ -22,8 +22,7 @@ module VagrantPlugins
         newconfig = ''
 
         # Read contents of SSH config file
-        file = File.open(@@ssh_user_config_path, "rb")
-        configContents = file.read
+        configContents = File.read(@@ssh_user_config_path)
         # Check for existing entry for hostname in config
         entryPattern = configEntryPattern(hostname, name, uuid)
         if configContents.match(/#{entryPattern}/)
@@ -94,8 +93,7 @@ module VagrantPlugins
           @ui.info "[vagrant-mutagen] No machine id, nothing removed from #@@ssh_user_config_path"
           return
         end
-        file = File.open(@@ssh_user_config_path, "rb")
-        configContents = file.read
+        configContents = File.read(@@ssh_user_config_path)
         uuid = @machine.id || @machine.config.mutagen.id
         hashedId = Digest::MD5.hexdigest(uuid)
         if configContents.match(/#{hashedId}/)
