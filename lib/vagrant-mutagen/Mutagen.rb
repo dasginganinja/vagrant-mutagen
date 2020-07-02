@@ -57,9 +57,8 @@ module VagrantPlugins
             cmd_content = content.lines.map {|line| ">>\"#{@@ssh_user_config_path}\" echo #{line}" }.join
             tmpFile.puts(cmd_content)
           end
-          sudo(tmpPath)
-          #[TODO] sudo を実行するのを待たずにファイルが削除されるのか、delete すると cmd が実行されない
-          # File.delete(tmpPath)
+          sudo(tmpPath, true)
+          File.delete(tmpPath)
         else
           content = "\n" + content + "\n"
           hostsFile = File.open(@@ssh_user_config_path, "a")
@@ -137,7 +136,7 @@ module VagrantPlugins
         %Q(# VAGRANT: #{hashedId} (#{name}) / #{uuid})
       end
 
-      def sudo(command)
+      def sudo(command, wait = false)
         return if !command
         if Vagrant::Util::Platform.windows?
           require 'win32ole'
@@ -145,6 +144,8 @@ module VagrantPlugins
           command = args.shift
           sh = WIN32OLE.new('Shell.Application')
           sh.ShellExecute(command, args.join(" "), '', 'runas', 0)
+          # ShellExecute does not wait for the command to exit.
+          sleep 3 if wait
         else
           return system("sudo #{command}")
         end
