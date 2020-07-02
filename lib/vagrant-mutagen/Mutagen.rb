@@ -144,8 +144,7 @@ module VagrantPlugins
           command = args.shift
           sh = WIN32OLE.new('Shell.Application')
           sh.ShellExecute(command, args.join(" "), '', 'runas', 0)
-          # ShellExecute does not wait for the command to exit.
-          sleep 3 if wait
+          sleep 3 if wait # Wait a while because ShellExecute does not wait for the command to exit.
           return true
         else
           return system("sudo #{command}")
