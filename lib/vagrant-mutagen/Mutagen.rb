@@ -146,6 +146,7 @@ module VagrantPlugins
           sh.ShellExecute(command, args.join(" "), '', 'runas', 0)
           # ShellExecute does not wait for the command to exit.
           sleep 3 if wait
+          return true
         else
           return system("sudo #{command}")
         end
