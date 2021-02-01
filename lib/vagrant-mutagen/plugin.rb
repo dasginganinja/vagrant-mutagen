@@ -19,8 +19,8 @@ module VagrantPlugins
       end
 
       action_hook(:mutagen, :machine_action_up) do |hook|
-        hook.append(Action::UpdateConfig)
-        hook.append(Action::StartOrchestration)
+        hook.after(Vagrant::Action::Builtin::WaitForCommunicator, Action::UpdateConfig)
+        hook.after(Vagrant::Action::Builtin::WaitForCommunicator, Action::StartOrchestration)
       end
 
       action_hook(:mutagen, :machine_action_provision) do |hook|
@@ -50,15 +50,15 @@ module VagrantPlugins
       action_hook(:mutagen, :machine_action_reload) do |hook|
         hook.append(Action::TerminateOrchestration)
         hook.prepend(Action::RemoveConfig)
-        hook.append(Action::UpdateConfig)
-        hook.append(Action::StartOrchestration)
+        hook.after(Vagrant::Action::Builtin::WaitForCommunicator, Action::UpdateConfig)
+        hook.after(Vagrant::Action::Builtin::WaitForCommunicator, Action::StartOrchestration)
       end
 
       action_hook(:mutagen, :machine_action_resume) do |hook|
         hook.append(Action::TerminateOrchestration)
         hook.prepend(Action::RemoveConfig)
-        hook.append(Action::UpdateConfig)
-        hook.append(Action::StartOrchestration)
+        hook.after(Vagrant::Action::Builtin::WaitForCommunicator, Action::UpdateConfig)
+        hook.after(Vagrant::Action::Builtin::WaitForCommunicator, Action::StartOrchestration)
       end
 
       command(:mutagen) do
