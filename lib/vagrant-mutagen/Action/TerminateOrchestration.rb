@@ -14,6 +14,7 @@ module VagrantPlugins
 
         def call(env)
           if mutagen_enabled
+            @ui.info "[vagrant-mutagen] Checking for deactivating orchestration"
             terminateOrchestration
           end
           @app.call(env)

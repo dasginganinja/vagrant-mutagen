@@ -24,12 +24,10 @@ module VagrantPlugins
         # Check for existing entry for hostname in config
         entryPattern = configEntryPattern(hostname, name, uuid)
         if configContents.match(/#{entryPattern}/)
-          @ui.info "[vagrant-mutagen]   updating SSH Config entry for: #{hostname}"
           removeConfigEntries
-        else
-          @ui.info "[vagrant-mutagen]   adding entry to SSH config for: #{hostname}"
         end
 
+        @ui.info "[vagrant-mutagen]   adding entry to SSH config for: #{hostname}"
         # Get SSH config from Vagrant
         newconfig = createConfigEntry(hostname, name, uuid)
         # Append vagrant ssh config to end of file
@@ -92,8 +90,10 @@ module VagrantPlugins
         file = File.open(@@ssh_user_config_path, "rb")
         configContents = file.read
         uuid = @machine.id || @machine.config.mutagen.id
+        hostname = @machine.config.vm.hostname
         hashedId = Digest::MD5.hexdigest(uuid)
         if configContents.match(/#{hashedId}/)
+          @ui.info "[vagrant-mutagen]   removing SSH Config entry for: #{hostname}"
           removeFromConfig
         end
       end
@@ -164,7 +164,7 @@ module VagrantPlugins
           @ui.error "[vagrant-mutagen] Failed to start mutagen daemon"
         end
         if !system(projectStartedCommand) # mutagen project list returns 1 on error when no project is started
-          @ui.info "[vagrant-mutagen] Starting mutagen project orchestration (config: /mutagen.yml)"
+          @ui.info "[vagrant-mutagen]   starting mutagen project orchestration (config: /mutagen.yml)"
           if !system(projectStartCommand)
             @ui.error "[vagrant-mutagen] Failed to start mutagen project (see error above)"
           end
@@ -177,7 +177,7 @@ module VagrantPlugins
         projectTerminateCommand = "mutagen project terminate"
         projectStatusCommand = "mutagen project list 2>/dev/null"
         if system(projectStartedCommand) # mutagen project list returns 1 on error when no project is started
-          @ui.info "[vagrant-mutagen] Stopping mutagen project orchestration"
+          @ui.info "[vagrant-mutagen]   stopping mutagen project orchestration"
           if !system(projectTerminateCommand)
             @ui.error "[vagrant-mutagen] Failed to stop mutagen project (see error above)"
           end

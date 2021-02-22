@@ -19,8 +19,8 @@ module VagrantPlugins
       end
 
       action_hook(:mutagen, :machine_action_up) do |hook|
-        hook.append(Action::UpdateConfig)
-        hook.append(Action::StartOrchestration)
+        hook.after(Vagrant::Action::Builtin::WaitForCommunicator, Action::StartOrchestration)
+        hook.after(Vagrant::Action::Builtin::WaitForCommunicator, Action::UpdateConfig)
       end
 
       action_hook(:mutagen, :machine_action_provision) do |hook|
@@ -29,36 +29,28 @@ module VagrantPlugins
       end
 
       action_hook(:mutagen, :machine_action_halt) do |hook|
-        hook.append(Action::TerminateOrchestration)
-        hook.append(Action::RemoveConfig)
+        hook.before(Vagrant::Action::Builtin::GracefulHalt, Action::TerminateOrchestration)
       end
 
       action_hook(:mutagen, :machine_action_suspend) do |hook|
-        hook.append(Action::TerminateOrchestration)
-        hook.append(Action::RemoveConfig)
+        hook.prepend(Action::TerminateOrchestration)
       end
 
       action_hook(:mutagen, :machine_action_destroy) do |hook|
-        hook.prepend(Action::CacheConfig)
-      end
-
-      action_hook(:mutagen, :machine_action_destroy) do |hook|
-        hook.append(Action::TerminateOrchestration)
-        hook.append(Action::RemoveConfig)
+        hook.before(Vagrant::Action::Builtin::GracefulHalt, Action::CacheConfig)
+        hook.before(Vagrant::Action::Builtin::GracefulHalt, Action::TerminateOrchestration)
+        hook.after(Vagrant::Action::Builtin::GracefulHalt, Action::RemoveConfig)
       end
 
       action_hook(:mutagen, :machine_action_reload) do |hook|
-        hook.append(Action::TerminateOrchestration)
-        hook.prepend(Action::RemoveConfig)
-        hook.append(Action::UpdateConfig)
-        hook.append(Action::StartOrchestration)
+        hook.before(Vagrant::Action::Builtin::GracefulHalt, Action::TerminateOrchestration)
+        hook.after(Vagrant::Action::Builtin::WaitForCommunicator, Action::StartOrchestration)
+        hook.after(Vagrant::Action::Builtin::WaitForCommunicator, Action::UpdateConfig)
       end
 
       action_hook(:mutagen, :machine_action_resume) do |hook|
-        hook.append(Action::TerminateOrchestration)
-        hook.prepend(Action::RemoveConfig)
-        hook.append(Action::UpdateConfig)
-        hook.append(Action::StartOrchestration)
+        hook.after(Vagrant::Action::Builtin::WaitForCommunicator, Action::StartOrchestration)
+        hook.after(Vagrant::Action::Builtin::WaitForCommunicator, Action::UpdateConfig)
       end
 
       command(:mutagen) do
