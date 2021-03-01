@@ -72,7 +72,7 @@ module VagrantPlugins
 
       def createConfigEntry(hostname, name, uuid = self.uuid)
         # Get the SSH config from Vagrant
-        sshconfig = `vagrant ssh-config --host #{hostname}`
+        sshconfig = `vagrant ssh-config #{name} --host #{hostname}`
         # Trim Whitespace from end
         sshconfig = sshconfig.gsub /^$\n/, ''
         sshconfig = sshconfig.chomp
@@ -156,15 +156,18 @@ module VagrantPlugins
       end
 
       def startOrchestration()
+        project_file = @machine.config.mutagen.project_file
+
         daemonCommand = "mutagen daemon start"
-        projectStartedCommand = "mutagen project list >/dev/null 2>/dev/null"
-        projectStartCommand = "mutagen project start"
-        projectStatusCommand = "mutagen project list"
+        projectStartedCommand = "mutagen project list -f #{project_file} >/dev/null 2>/dev/null"
+        projectStartCommand = "mutagen project start -f #{project_file}"
+        projectStatusCommand = "mutagen project list -f #{project_file}"
+
         if !system(daemonCommand)
           @ui.error "[vagrant-mutagen] Failed to start mutagen daemon"
         end
         if !system(projectStartedCommand) # mutagen project list returns 1 on error when no project is started
-          @ui.info "[vagrant-mutagen] Starting mutagen project orchestration (config: /mutagen.yml)"
+          @ui.info "[vagrant-mutagen] Starting mutagen project orchestration (config: #{project_file})"
           if !system(projectStartCommand)
             @ui.error "[vagrant-mutagen] Failed to start mutagen project (see error above)"
           end
@@ -173,9 +176,12 @@ module VagrantPlugins
       end
 
       def terminateOrchestration()
-        projectStartedCommand = "mutagen project list >/dev/null 2>/dev/null"
-        projectTerminateCommand = "mutagen project terminate"
-        projectStatusCommand = "mutagen project list 2>/dev/null"
+        project_file = @machine.config.mutagen.project_file
+
+        projectStartedCommand = "mutagen project list -f #{project_file} >/dev/null 2>/dev/null"
+        projectTerminateCommand = "mutagen project terminate -f #{project_file}"
+        projectStatusCommand = "mutagen project list -f #{project_file} 2>/dev/null"
+
         if system(projectStartedCommand) # mutagen project list returns 1 on error when no project is started
           @ui.info "[vagrant-mutagen] Stopping mutagen project orchestration"
           if !system(projectTerminateCommand)
