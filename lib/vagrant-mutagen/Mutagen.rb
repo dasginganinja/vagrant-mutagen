@@ -3,6 +3,9 @@ require 'yaml'
 module VagrantPlugins
   module Mutagen
     module Mutagen
+      DISCARD_STDOUT = Vagrant::Util::Platform.windows? ? '>nul'  : '>/dev/null'
+      DISCARD_STDERR = Vagrant::Util::Platform.windows? ? '2>nul' : '2>/dev/null'
+
       if ENV['VAGRANT_MUTAGEN_SSH_CONFIG_PATH']
         @@ssh_user_config_path = ENV['VAGRANT_MUTAGEN_SSH_CONFIG_PATH']
       else
@@ -19,8 +22,7 @@ module VagrantPlugins
         newconfig = ''
 
         # Read contents of SSH config file
-        file = File.open(@@ssh_user_config_path, "rb")
-        configContents = file.read
+        configContents = File.read(@@ssh_user_config_path)
         # Check for existing entry for hostname in config
         entryPattern = configEntryPattern(hostname, name, uuid)
         if configContents.match(/#{entryPattern}/)
@@ -52,9 +54,10 @@ module VagrantPlugins
           uuid = @machine.id || @machine.config.mutagen.id
           tmpPath = File.join(Dir.tmpdir, 'hosts-' + uuid + '.cmd')
           File.open(tmpPath, "w") do |tmpFile|
-          tmpFile.puts(">>\"#{@@ssh_user_config_path}\" echo #{content}")
+            cmd_content = content.lines.map {|line| ">>\"#{@@ssh_user_config_path}\" echo #{line}" }.join
+            tmpFile.puts(cmd_content)
           end
-          sudo(tmpPath)
+          sudo(tmpPath, true)
           File.delete(tmpPath)
         else
           content = "\n" + content + "\n"
@@ -89,8 +92,7 @@ module VagrantPlugins
           @ui.info "[vagrant-mutagen] No machine id, nothing removed from #@@ssh_user_config_path"
           return
         end
-        file = File.open(@@ssh_user_config_path, "rb")
-        configContents = file.read
+        configContents = File.read(@@ssh_user_config_path)
         uuid = @machine.id || @machine.config.mutagen.id
         hashedId = Digest::MD5.hexdigest(uuid)
         if configContents.match(/#{hashedId}/)
@@ -134,7 +136,7 @@ module VagrantPlugins
         %Q(# VAGRANT: #{hashedId} (#{name}) / #{uuid})
       end
 
-      def sudo(command)
+      def sudo(command, wait = false)
         return if !command
         if Vagrant::Util::Platform.windows?
           require 'win32ole'
@@ -142,6 +144,8 @@ module VagrantPlugins
           command = args.shift
           sh = WIN32OLE.new('Shell.Application')
           sh.ShellExecute(command, args.join(" "), '', 'runas', 0)
+          sleep 3 if wait # Wait a while because ShellExecute does not wait for the command to exit.
+          return true
         else
           return system("sudo #{command}")
         end
@@ -157,7 +161,7 @@ module VagrantPlugins
 
       def startOrchestration()
         daemonCommand = "mutagen daemon start"
-        projectStartedCommand = "mutagen project list >/dev/null 2>/dev/null"
+        projectStartedCommand = "mutagen project list #{DISCARD_STDOUT} #{DISCARD_STDERR}"
         projectStartCommand = "mutagen project start"
         projectStatusCommand = "mutagen project list"
         if !system(daemonCommand)
@@ -173,9 +177,9 @@ module VagrantPlugins
       end
 
       def terminateOrchestration()
-        projectStartedCommand = "mutagen project list >/dev/null 2>/dev/null"
+        projectStartedCommand = "mutagen project list #{DISCARD_STDOUT} #{DISCARD_STDERR}"
         projectTerminateCommand = "mutagen project terminate"
-        projectStatusCommand = "mutagen project list 2>/dev/null"
+        projectStatusCommand = "mutagen project list #{DISCARD_STDERR}"
         if system(projectStartedCommand) # mutagen project list returns 1 on error when no project is started
           @ui.info "[vagrant-mutagen] Stopping mutagen project orchestration"
           if !system(projectTerminateCommand)
