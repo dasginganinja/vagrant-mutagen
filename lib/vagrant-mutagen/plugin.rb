@@ -44,19 +44,19 @@ module VagrantPlugins
 
       action_hook(:mutagen, :machine_action_destroy) do |hook|
         hook.append(Action::TerminateOrchestration)
-        hook.append(Action::RemoveConfig)
+        hook.after(Action::TerminateOrchestration, Action::RemoveConfig)
       end
 
       action_hook(:mutagen, :machine_action_reload) do |hook|
-        hook.append(Action::TerminateOrchestration)
-        hook.prepend(Action::RemoveConfig)
+        hook.prepend(Action::TerminateOrchestration)
+        hook.after(Action::TerminateOrchestration, Action::RemoveConfig)
         hook.after(Vagrant::Action::Builtin::WaitForCommunicator, Action::UpdateConfig)
         hook.after(Action::UpdateConfig, Action::StartOrchestration)
       end
 
       action_hook(:mutagen, :machine_action_resume) do |hook|
-        hook.append(Action::TerminateOrchestration)
-        hook.prepend(Action::RemoveConfig)
+        hook.prepend(Action::TerminateOrchestration)
+        hook.after(Action::TerminateOrchestration, Action::RemoveConfig)
         hook.after(Vagrant::Action::Builtin::WaitForCommunicator, Action::UpdateConfig)
         hook.after(Action::UpdateConfig, Action::StartOrchestration)
       end
